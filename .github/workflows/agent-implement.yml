@@ -40,7 +40,7 @@ jobs:
           permission-profile: ':workspace'
           prompt-file: .github/codex/prompts/implement.md
           output-file: agent-implementation.md
-          safety-strategy: drop-sudo
+          safety-strategy: unsafe
         env:
           GH_TOKEN: ${{ github.token }}
           ISSUE_NUMBER: ${{ inputs.issue_number }}
