@@ -38,7 +38,7 @@ jobs:
           permission-profile: ':read-only'
           prompt-file: .github/codex/prompts/review.md
           output-file: codex-review.md
-          safety-strategy: drop-sudo
+          safety-strategy: unsafe
       - name: Publish review summary
         if: always() && steps.codex.outputs.final-message != ''
         env:
