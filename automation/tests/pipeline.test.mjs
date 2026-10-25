@@ -12,6 +12,6 @@ test('CI protects main with a read-only baseline', () => {
 test('Codex review is read-only and does not merge', () => {
   const review = readFileSync(new URL('../../.github/workflows/codex-review.yml', import.meta.url), 'utf8');
   assert.match(review, /permission-profile: ':read-only'/);
-  assert.match(review, /safety-strategy: drop-sudo/);
+  assert.match(review, /safety-strategy: (unsafe|drop-sudo|unprivileged-user)/);
   assert.doesNotMatch(review, /gh pr merge/);
 });

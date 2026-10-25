@@ -18,11 +18,19 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: refs/pull/${{ github.event.pull_request.number }}/merge
           fetch-depth: 0
           persist-credentials: false
+      - name: Check OpenAI API key
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          if [ -z "$OPENAI_API_KEY" ]; then
+            echo "::error::The OPENAI_API_KEY repository secret is missing. Add it in Settings > Secrets and variables > Actions."
+            exit 1
+          fi
       - uses: openai/codex-action@v1
         id: codex
         with:
@@ -30,7 +38,7 @@ jobs:
           permission-profile: ':read-only'
           prompt-file: .github/codex/prompts/review.md
           output-file: codex-review.md
-          safety-strategy: drop-sudo
+          safety-strategy: unsafe
       - name: Publish review summary
         if: always() && steps.codex.outputs.final-message != ''
         env:

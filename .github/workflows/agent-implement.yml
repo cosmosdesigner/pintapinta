@@ -1,0 +1,47 @@
+name: Agent implement
+on:
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: Issue number approved for implementation
+        required: true
+        type: number
+      base_branch:
+        description: Branch to target with the pull request
+        required: true
+        default: main
+        type: string
+permissions:
+  contents: write
+  pull-requests: write
+  issues: read
+concurrency:
+  group: agent-implement-${{ inputs.issue_number }}
+  cancel-in-progress: false
+jobs:
+  implement:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.base_branch }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Read issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE: ${{ inputs.issue_number }}
+        run: gh issue view "$ISSUE" --json number,title,body,labels,author > issue.json
+      - uses: openai/codex-action@v1
+        id: codex
+        with:
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          permission-profile: ':workspace'
+          prompt-file: .github/codex/prompts/implement.md
+          output-file: agent-implementation.md
+          safety-strategy: unsafe
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE_NUMBER: ${{ inputs.issue_number }}
+          BASE_BRANCH: ${{ inputs.base_branch }}
