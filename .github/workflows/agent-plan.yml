@@ -1,28 +1,35 @@
 name: Agent plan
 on:
   issues:
-    types: [labeled]
+    types: [opened, labeled]
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: Issue number for manual recovery only
+        required: true
+        type: number
 permissions:
   actions: write
   contents: read
   issues: write
 concurrency:
-  group: agent-plan-${{ github.event.issue.number }}
+  group: agent-plan-${{ github.event.issue.number || inputs.issue_number }}
   cancel-in-progress: true
 jobs:
   plan:
-    if: github.event.label.name == 'agent-ready' && github.event.issue.pull_request == null && github.event.issue.user.login == github.repository_owner
+    if: github.event_name == 'workflow_dispatch' || (github.event.issue.pull_request == null && (github.event.label.name == 'agent-ready' || contains(github.event.issue.labels.*.name, 'agent-ready')))
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      ISSUE: ${{ github.event.issue.number || inputs.issue_number }}
     steps:
       - uses: actions/checkout@v5
         with:
-          ref: ${{ github.event.repository.default_branch }}
+          ref: ${{ github.event.repository.default_branch || 'main' }}
           persist-credentials: false
       - name: Capture triggering issue
         env:
           GH_TOKEN: ${{ github.token }}
-          ISSUE: ${{ github.event.issue.number }}
         run: gh issue view "$ISSUE" --json number,title,body,labels,author > issue.json
       - uses: openai/codex-action@v1
         id: codex
@@ -33,23 +40,20 @@ jobs:
           output-file: agent-plan.md
           safety-strategy: unsafe
         env:
-          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_NUMBER: ${{ github.event.issue.number || inputs.issue_number }}
           ISSUE_TITLE: ${{ github.event.issue.title }}
           ISSUE_BODY: ${{ github.event.issue.body }}
       - name: Validate plan issue number
         id: validate
         env:
-          ISSUE: ${{ github.event.issue.number }}
           PLAN: ${{ steps.codex.outputs.final-message }}
         run: |
           set -euo pipefail
-          printf '%s
-' "$PLAN" | grep -Fq "PLANNED ISSUE: #$ISSUE" || {
+          grep -Fq "PLANNED ISSUE: #$ISSUE" <<< "$PLAN" || {
             echo "::error::Planner output does not contain the required marker for triggering issue #$ISSUE."
             exit 1
           }
-          printf '%s
-' "$PLAN" | grep -Fq "PLAN STATUS: READY" || {
+          grep -Fq "PLAN STATUS: READY" <<< "$PLAN" || {
             echo "::error::Planner did not finish with PLAN STATUS: READY."
             exit 1
           }
@@ -58,14 +62,12 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           PLAN: ${{ steps.codex.outputs.final-message }}
-          ISSUE: ${{ github.event.issue.number }}
         run: gh issue comment "$ISSUE" --body "$PLAN"
       - name: Dispatch implementation automatically
         if: steps.validate.outcome == 'success'
         env:
           GH_TOKEN: ${{ github.token }}
-          ISSUE: ${{ github.event.issue.number }}
-          BASE: ${{ github.event.repository.default_branch }}
+          BASE: ${{ github.event.repository.default_branch || 'main' }}
         run: |
           gh workflow run agent-implement.yml \
             --repo "$GITHUB_REPOSITORY" \
