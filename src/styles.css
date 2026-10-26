@@ -54,6 +54,8 @@ footer { text-align: center; color: #766456; font-size: 12px; padding: 24px; }
 .swatch:focus-visible { outline: 3px solid #71449b; outline-offset: 3px; }
 .swatch-check { display: flex; background: #fff; color: #45362e; border-radius: 4px; }
 .swatch-check svg { width: 20px; height: 20px; }
+.custom-color { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 20px; font-size: 15px; font-weight: 650; }
+.custom-color input { width: 64px; height: 48px; padding: 4px; border: 1px solid #ddcec1; border-radius: 8px; background: #fffbf5; cursor: pointer; outline-offset: 5px; }
 .instruction { margin: 20px 0 24px; font-size: 15px; color: #766456; }
 .history-tools { display: flex; gap: 8px; border-top: 1px solid #ddcec1; padding-top: 20px; }
 .tool-button { flex: 1; padding: 10px 8px; font-size: 13px; }
