@@ -18,6 +18,11 @@ jobs:
         with:
           ref: ${{ github.event.repository.default_branch }}
           persist-credentials: false
+      - name: Capture triggering issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE: ${{ github.event.issue.number }}
+        run: gh issue view "$ISSUE" --json number,title,body,labels,author > issue.json
       - uses: openai/codex-action@v1
         id: codex
         with:
@@ -30,6 +35,15 @@ jobs:
           ISSUE_NUMBER: ${{ github.event.issue.number }}
           ISSUE_TITLE: ${{ github.event.issue.title }}
           ISSUE_BODY: ${{ github.event.issue.body }}
+      - name: Validate plan issue number
+        env:
+          ISSUE: ${{ github.event.issue.number }}
+          PLAN: ${{ steps.codex.outputs.final-message }}
+        run: |
+          case "$PLAN" in
+            *"issue #$ISSUE"*|*"Issue #$ISSUE"*) ;;
+            *) echo "::error::Planner output does not reference triggering issue #$ISSUE."; exit 1 ;;
+          esac
       - name: Publish plan
         if: always() && steps.codex.outputs.final-message != ''
         env:
