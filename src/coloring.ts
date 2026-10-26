@@ -1,4 +1,4 @@
-import { drawings, palette } from './drawings';
+import { drawings } from './drawings';
 
 export type Colors = Record<string, string>;
 export type Book = Record<string, Colors>;
@@ -33,7 +33,7 @@ export function parseBook(raw: string | null): Book {
       const colors: Colors = {};
       for (const region of drawing.regions) {
         const value = (entry as Record<string, unknown>)[region.id];
-        if (typeof value === 'string' && palette.some(color => color.value === value)) colors[region.id] = value;
+        if (typeof value === 'string' && /^#[0-9a-f]{6}$/i.test(value)) colors[region.id] = value;
       }
       book[drawing.id] = colors;
     }

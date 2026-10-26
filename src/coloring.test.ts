@@ -25,4 +25,12 @@ describe('painting areas', () => {
     expect(drawings).toHaveLength(3);
     for (const drawing of drawings) expect(new Set(drawing.regions.map(region => region.id)).size).toBe(drawing.regions.length);
   });
+  it('restores custom hex colors and rejects invalid color values', () => {
+    for (const color of ['#123abc', '#ABCDEF', '#000000', '#ffffff']) {
+      expect(parseBook(JSON.stringify({ borboleta: { body: color } }))).toEqual({ borboleta: { body: color } });
+    }
+    for (const color of ['url(x)', 'red', '#123', '#1234567', '#gggggg', 123456, null]) {
+      expect(parseBook(JSON.stringify({ borboleta: { body: color } }))).toEqual({ borboleta: {} });
+    }
+  });
 });

@@ -42,6 +42,10 @@ function Studio({ drawing, initialColors, onBack, onChange }: { drawing: Drawing
             {selected.value === color.value && <span className="swatch-check"><Icon name="check" /></span>}
           </button>)}
         </div>
+        <label className="custom-color">
+          <span>Cor personalizada</span>
+          <input type="color" value={selected.value} onChange={event => setSelected({ name: `Cor ${event.target.value}`, value: event.target.value })} />
+        </label>
         <p className="instruction">Agora toca numa parte do desenho!</p>
         <div className="history-tools">
           <button className="tool-button" onClick={() => dispatch({ type: 'undo' })} disabled={!state.past.length}><Icon name="undo" /><span>Desfazer</span></button>
