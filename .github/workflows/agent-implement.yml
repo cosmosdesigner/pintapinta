@@ -80,4 +80,9 @@ jobs:
             Verification: npm run verify passed.
 
             The PR requires human approval before merge.
-        run: gh pr create --repo "$GITHUB_REPOSITORY" --head "$BRANCH" --base "$BASE" --title "feat: implement issue #$ISSUE" --body "$PR_BODY"
+        run: >-
+          gh pr create --repo "$GITHUB_REPOSITORY"
+          --head "$BRANCH"
+          --base "$BASE"
+          --title "feat: implement issue #$ISSUE"
+          --body "$PR_BODY"
