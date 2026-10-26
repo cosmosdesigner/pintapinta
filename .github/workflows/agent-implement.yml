@@ -27,7 +27,13 @@ jobs:
         with:
           ref: ${{ inputs.base_branch }}
           fetch-depth: 0
-          persist-credentials: false
+          persist-credentials: true
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
       - name: Read issue
         env:
           GH_TOKEN: ${{ github.token }}
@@ -42,6 +48,41 @@ jobs:
           output-file: agent-implementation.md
           safety-strategy: unsafe
         env:
-          GH_TOKEN: ${{ github.token }}
           ISSUE_NUMBER: ${{ inputs.issue_number }}
           BASE_BRANCH: ${{ inputs.base_branch }}
+      - name: Verify implementation
+        run: npm run verify
+      - name: Create branch and commit
+        id: commit
+        env:
+          ISSUE: ${{ inputs.issue_number }}
+        run: |
+          set -euo pipefail
+          test -n "$(git status --porcelain)" || { echo "No implementation changes were produced."; exit 1; }
+          git diff --check
+          branch="agent/issue-$ISSUE"
+          git switch -c "$branch"
+          git config user.name "Pinta-Pinta implementation agent"
+          git config user.email "pintapinta-agent@users.noreply.github.com"
+          git add -A
+          git commit -m "feat: implement issue #$ISSUE"
+          git push --set-upstream origin "$branch"
+          echo "branch=$branch" >> "$GITHUB_OUTPUT"
+      - name: Open pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE: ${{ inputs.issue_number }}
+          BASE: ${{ inputs.base_branch }}
+          BRANCH: ${{ steps.commit.outputs.branch }}
+          PR_BODY: |
+            Automated implementation for the requested issue.
+
+            Verification: npm run verify passed.
+
+            The PR requires human approval before merge.
+        run: >-
+          gh pr create --repo "$GITHUB_REPOSITORY"
+          --head "$BRANCH"
+          --base "$BASE"
+          --title "feat: implement issue #$ISSUE"
+          --body "$PR_BODY"
