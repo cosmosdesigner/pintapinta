@@ -69,6 +69,7 @@ jobs:
           git push --set-upstream origin "$branch"
           echo "branch=$branch" >> "$GITHUB_OUTPUT"
       - name: Open pull request
+        id: pr
         env:
           GH_TOKEN: ${{ github.token }}
           ISSUE: ${{ inputs.issue_number }}
@@ -80,9 +81,16 @@ jobs:
             Verification: npm run verify passed.
 
             The PR requires human approval before merge.
-        run: >-
-          gh pr create --repo "$GITHUB_REPOSITORY"
-          --head "$BRANCH"
-          --base "$BASE"
-          --title "feat: implement issue #$ISSUE"
-          --body "$PR_BODY"
+        run: |
+          set -euo pipefail
+          pr_url="$(gh pr create --repo "$GITHUB_REPOSITORY" --head "$BRANCH" --base "$BASE" --title "feat: implement issue #$ISSUE" --body "$PR_BODY")"
+          pr_number="$(gh pr view "$pr_url" --repo "$GITHUB_REPOSITORY" --json number --jq .number)"
+          echo "url=$pr_url" >> "$GITHUB_OUTPUT"
+          echo "number=$pr_number" >> "$GITHUB_OUTPUT"
+      - name: Request Codex review
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ steps.pr.outputs.number }}
+          BASE: ${{ inputs.base_branch }}
+        run: |
+          gh workflow run codex-review.yml --repo "$GITHUB_REPOSITORY" --ref "$BASE" -f pr_number="$PR"
