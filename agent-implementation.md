@@ -1,7 +1,7 @@
-Implementado o seletor “Cor personalizada”, mantendo a pintura por áreas e permitindo restaurar as novas cores guardadas no navegador.
+Implementado “Guardar imagem”: descarrega a pintura atual em PNG, com fundo branco, para guardar ou partilhar. Inclui mensagens em português e tratamento de erros.
 
-- `npm run verify` passou.
-- Adicionados testes comportamentais para telemóvel, tablet e desktop.
-- Testes E2E bloqueados: o ambiente impede abrir a porta local (`EPERM`).
+Adicionados testes de comportamento para teclado, três larguras de ecrã, conteúdo do PNG e nova tentativa após falha.
+
+`npm run verify` passou. Os testes E2E ficaram bloqueados pela restrição de porta local do ambiente (`EPERM`).
 
 Sem branches, commits, push ou PR.

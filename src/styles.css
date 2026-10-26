@@ -67,6 +67,8 @@ footer { text-align: center; color: #766456; font-size: 12px; padding: 24px; }
 .clear-dialog p { margin: 12px 0 24px; }
 .dialog-actions { display: flex; flex-wrap: wrap; gap: 12px; }
 .primary-button { background: #a04421; color: #fff; border-color: #a04421; }
+.export-button { width: 100%; margin-top: 20px; }
+.export-note { margin-top: 8px; font-size: 13px; color: #766456; }
 @media (max-width: 900px) {
   .workspace { gap: 20px; grid-template-columns: minmax(0, 1fr) 244px; }
   .drawing-grid { gap: 16px; }

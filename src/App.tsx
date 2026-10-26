@@ -4,6 +4,7 @@ import { drawings, palette } from './drawings';
 import type { Drawing } from './drawings';
 import { loadBook, paintingReducer, saveBook } from './coloring';
 import type { Book, Colors } from './coloring';
+import { downloadPainting } from './exportPainting';
 
 function Icon({ name }: { name: 'back' | 'undo' | 'redo' | 'clear' | 'check' }) {
   const paths = { back: 'm14 6-6 6 6 6M8 12h12', undo: 'M9 5 4 10l5 5M4 10h10a6 6 0 0 1 0 12', redo: 'm15 5 5 5-5 5m5-5H10a6 6 0 0 0 0 12', clear: 'm8 7 8 0m-10 0h12M9 7V4h6v3m-8 0 1 14h8l1-14M10 10v8m4-8v8', check: 'm5 12 4 4L19 6' };
@@ -15,6 +16,8 @@ function Studio({ drawing, initialColors, onBack, onChange }: { drawing: Drawing
   const [selected, setSelected] = useState(palette[0]);
   const [saved, setSaved] = useState(true);
   const [announcement, setAnnouncement] = useState('');
+  const [exporting, setExporting] = useState(false);
+  const [exportMessage, setExportMessage] = useState('');
   const clearDialog = useRef<HTMLDialogElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
   useEffect(() => { titleRef.current?.focus(); }, []);
@@ -24,6 +27,19 @@ function Studio({ drawing, initialColors, onBack, onChange }: { drawing: Drawing
     dispatch({ type: 'paint', region, color: selected.value });
     const label = drawing.regions.find(item => item.id === region)?.label;
     setAnnouncement(`${label}: ${selected.name.toLowerCase()}.`);
+  }
+
+  async function saveImage() {
+    setExporting(true);
+    setExportMessage('');
+    try {
+      await downloadPainting(drawing, state.colors);
+      setExportMessage('Imagem pronta! Consulta os downloads para guardar ou partilhar a tua pintura.');
+    } catch {
+      setExportMessage('Não foi possível guardar a imagem. Tenta novamente.');
+    } finally {
+      setExporting(false);
+    }
   }
 
   return <main className="studio">
@@ -52,6 +68,9 @@ function Studio({ drawing, initialColors, onBack, onChange }: { drawing: Drawing
           <button className="tool-button" onClick={() => dispatch({ type: 'redo' })} disabled={!state.future.length}><Icon name="redo" /><span>Refazer</span></button>
         </div>
         <button className="clear-button" disabled={!Object.keys(state.colors).length} onClick={() => clearDialog.current?.showModal()}><Icon name="clear" />Começar de novo</button>
+        <button className="primary-button export-button" disabled={exporting} onClick={saveImage}>{exporting ? 'A preparar imagem…' : 'Guardar imagem'}</button>
+        <p className="export-note">Descarrega uma imagem PNG para guardar ou partilhar.</p>
+        <p className="export-note" role="status">{exportMessage}</p>
       </aside>
     </div>
     <p className="sr-only" role="status" aria-live="polite">{announcement}</p>

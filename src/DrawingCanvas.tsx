@@ -3,7 +3,7 @@ import type { Colors } from './coloring';
 
 interface Props { drawing: Drawing; colors?: Colors; preview?: boolean; onPaint?: (region: string) => void }
 export function DrawingCanvas({ drawing, colors = {}, preview = false, onPaint }: Props) {
-  return <svg viewBox="0 0 500 500" className="drawing" aria-label={onPaint ? `Desenho para colorir: ${drawing.title}` : undefined}
+  return <svg xmlns="http://www.w3.org/2000/svg" width="500" height="500" viewBox="0 0 500 500" className="drawing" aria-label={onPaint ? `Desenho para colorir: ${drawing.title}` : undefined}
     aria-hidden={onPaint ? undefined : true} role={onPaint ? 'group' : undefined}>
     <g stroke="#45362e" strokeWidth="5" strokeLinejoin="round" strokeLinecap="round">
       {drawing.regions.map(region => <path key={region.id} d={region.d}
