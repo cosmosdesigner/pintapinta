@@ -36,16 +36,24 @@ jobs:
           ISSUE_TITLE: ${{ github.event.issue.title }}
           ISSUE_BODY: ${{ github.event.issue.body }}
       - name: Validate plan issue number
+        id: validate
         env:
           ISSUE: ${{ github.event.issue.number }}
           PLAN: ${{ steps.codex.outputs.final-message }}
         run: |
-          case "$PLAN" in
-            *"issue #$ISSUE"*|*"Issue #$ISSUE"*) ;;
-            *) echo "::error::Planner output does not reference triggering issue #$ISSUE."; exit 1 ;;
-          esac
+          set -euo pipefail
+          printf '%s
+' "$PLAN" | grep -Fq "PLANNED ISSUE: #$ISSUE" || {
+            echo "::error::Planner output does not contain the required marker for triggering issue #$ISSUE."
+            exit 1
+          }
+          printf '%s
+' "$PLAN" | grep -Fq "PLAN STATUS: READY" || {
+            echo "::error::Planner did not finish with PLAN STATUS: READY."
+            exit 1
+          }
       - name: Publish plan
-        if: always() && steps.codex.outputs.final-message != ''
+        if: steps.validate.outcome == 'success' && steps.codex.outputs.final-message != ''
         env:
           GH_TOKEN: ${{ github.token }}
           PLAN: ${{ steps.codex.outputs.final-message }}
